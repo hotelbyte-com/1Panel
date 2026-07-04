@@ -7,6 +7,7 @@ import (
 	"net"
 	"net/http"
 	"os"
+	"strings"
 	"syscall"
 
 	"github.com/gin-gonic/gin"
@@ -165,6 +166,15 @@ func Start() {
 			panic(err)
 		}
 		key, _ := encrypt.StringDecrypt(keyItem.Value)
+		if strings.TrimSpace(cert) == "" || strings.TrimSpace(key) == "" {
+			business.Init()
+			global.LOG.Info("agent startup: business initialized")
+			global.LOG.Infof("listen at http://0.0.0.0:%s", global.CONF.Base.Port)
+			if err := server.ListenAndServe(); err != nil {
+				panic(err)
+			}
+			return
+		}
 		tlsCert, err := tls.X509KeyPair([]byte(cert), []byte(key))
 		if err != nil {
 			fmt.Printf("failed to load X.509 key pair: %s\n", err)
