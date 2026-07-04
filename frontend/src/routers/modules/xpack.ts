@@ -8,7 +8,7 @@ const xpackRouter = {
     redirect: '/xpack/node/dashboard',
     meta: {
         title: 'xpack.menu',
-        icon: 'p-briefcase',
+        icon: 'p-node-menu',
         adminOnly: true,
     },
     children: [
@@ -18,6 +18,7 @@ const xpackRouter = {
             component: () => import('@/views/xpack/node/index.vue'),
             meta: {
                 title: 'xpack.node.nodeManagement',
+                icon: 'p-node-menu',
                 activeMenu: '/xpack/node/dashboard',
                 adminOnly: true,
             },
