@@ -102,7 +102,7 @@ import {
     checkNode,
     createNode,
     deleteNode,
-    getNodeDashboard,
+    listNodeOptions,
     syncNodes,
     updateNode,
     updateNodeFavorite,
@@ -174,9 +174,18 @@ const buttons = [
 const search = async () => {
     loading.value = true;
     try {
-        const res = await getNodeDashboard();
-        Object.assign(dashboard, res.data);
-        nodes.value = res.data.nodes || [];
+        const res = await listNodeOptions('all');
+        const list = res.data || [];
+        nodes.value = list;
+        Object.assign(dashboard, {
+            total: list.length,
+            healthy: list.filter((item) => item.status === 'Healthy').length,
+            offline: list.filter((item) => item.status === 'Offline').length,
+            unhealthy: list.filter((item) => !['Healthy', 'Offline', 'Upgrading', 'Syncing'].includes(item.status)).length,
+            upgrading: list.filter((item) => item.status === 'Upgrading').length,
+            syncing: list.filter((item) => item.status === 'Syncing').length,
+            nodes: list,
+        });
     } finally {
         loading.value = false;
     }
