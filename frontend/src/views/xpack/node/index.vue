@@ -102,6 +102,7 @@ import {
     checkNode,
     createNode,
     deleteNode,
+    getAgentSettingInfo,
     listNodeOptions,
     syncNodes,
     updateNode,
@@ -110,12 +111,17 @@ import {
 } from '@/api/modules/setting';
 import { useGlobalStore } from '@/composables/useGlobalStore';
 import i18n from '@/lang';
-import { MsgSuccess } from '@/utils/message';
+import { MenuStore } from '@/store';
+import { MsgError, MsgSuccess } from '@/utils/message';
+import { routerToNameWithQuery } from '@/utils/router';
+import { loadProductProFromDB } from '@/utils/xpack';
 import { onMounted, reactive, ref } from 'vue';
 
-const { globalStore, currentNode, currentNodeAddr } = useGlobalStore();
+const { globalStore, currentNode, currentNodeAddr, defaultNetwork } = useGlobalStore();
+const menuStore = MenuStore();
 const loading = ref(false);
 const submitLoading = ref(false);
+const switchingNode = ref(false);
 const drawerVisible = ref(false);
 const nodes = ref<Setting.NodeItem[]>([]);
 const selectedIDs = ref<number[]>([]);
@@ -242,9 +248,32 @@ const upgradeSelected = async () => {
     await search();
 };
 
-const switchNode = (row: Setting.NodeItem) => {
-    currentNode.value = row.name;
-    currentNodeAddr.value = row.addr;
+const switchNode = async (row: Setting.NodeItem) => {
+    if (switchingNode.value) {
+        return;
+    }
+    if (row.status !== 'Healthy') {
+        MsgError(i18n.global.t('xpack.node.nodeUnhealthyHelper'));
+        return;
+    }
+    switchingNode.value = true;
+    loading.value = true;
+    try {
+        const targetNode = row.name || 'local';
+        const settingRes = await getAgentSettingInfo(targetNode);
+        defaultNetwork.value = settingRes.data.defaultNetwork;
+        localStorage.removeItem('dashboardCache');
+        localStorage.removeItem('upgradeChecked');
+        currentNode.value = targetNode;
+        currentNodeAddr.value = row.addr;
+        menuStore.setMenuList([]);
+        loadProductProFromDB();
+        MsgSuccess(i18n.global.t('commons.msg.operationSuccess'));
+        await routerToNameWithQuery('home', { t: Date.now() });
+    } finally {
+        switchingNode.value = false;
+        loading.value = false;
+    }
 };
 
 const displayNode = (row: Setting.NodeItem) => (row.name === 'local' ? globalStore.getMasterAlias() : row.name);
