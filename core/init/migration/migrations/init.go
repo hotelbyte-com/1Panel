@@ -5,6 +5,7 @@ import (
 	"errors"
 	"fmt"
 	"path"
+	"strconv"
 	"strings"
 	"time"
 
@@ -306,6 +307,51 @@ var InitHost = &gormigrate.Migration{
 		}
 		if err := tx.Create(&model.Group{Name: "Default", Type: "script", IsDefault: true}).Error; err != nil {
 			return err
+		}
+		return nil
+	},
+}
+
+var AddCommunityNodes = &gormigrate.Migration{
+	ID: "20260704-add-community-nodes",
+	Migrate: func(tx *gorm.DB) error {
+		if err := tx.AutoMigrate(&model.Node{}); err != nil {
+			return err
+		}
+		var group model.Group
+		if err := tx.Where("type = ? AND is_default = ?", "node", true).First(&group).Error; err != nil {
+			if errors.Is(err, gorm.ErrRecordNotFound) {
+				group = model.Group{Name: "Default", Type: "node", IsDefault: true}
+				if err := tx.Create(&group).Error; err != nil {
+					return err
+				}
+			} else {
+				return err
+			}
+		}
+		var count int64
+		if err := tx.Model(&model.Node{}).Where("name = ?", "local").Count(&count).Error; err != nil {
+			return err
+		}
+		if count == 0 {
+			var settings []model.Setting
+			_ = tx.Where("key IN ?", []string{"SystemVersion", "SecurityEntrance", "ServerPort"}).Find(&settings).Error
+			values := map[string]string{}
+			for _, setting := range settings {
+				values[setting.Key] = setting.Value
+			}
+			port, _ := strconv.Atoi(values["ServerPort"])
+			if port == 0 {
+				port = 9999
+			}
+			if err := tx.Create(&model.Node{
+				Name: "local", Addr: "127.0.0.1", GroupID: group.ID, Status: "Healthy",
+				Version: values["SystemVersion"], SystemVersion: values["SystemVersion"],
+				SecurityEntrance: values["SecurityEntrance"], AgentPort: port, SSHPort: 22,
+				SSHUser: "root", AuthMode: "password", IsBound: true,
+			}).Error; err != nil {
+				return err
+			}
 		}
 		return nil
 	},

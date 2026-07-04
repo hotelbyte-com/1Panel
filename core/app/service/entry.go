@@ -9,6 +9,7 @@ var (
 	logRepo        = repo.NewILogRepo()
 	groupRepo      = repo.NewIGroupRepo()
 	upgradeLogRepo = repo.NewIUpgradeLogRepo()
+	nodeRepo       = repo.NewINodeRepo()
 
 	agentRepo  = repo.NewIAgentRepo()
 	scriptRepo = repo.NewIScriptRepo()

@@ -4,6 +4,9 @@ import (
 	"crypto/tls"
 	"net"
 	"net/http"
+	"os"
+	"path"
+	"strings"
 	"time"
 
 	"github.com/1Panel-dev/1Panel/agent/app/dto"
@@ -62,7 +65,11 @@ func (m *multiNodeHelper) LoadRequestTransport() *http.Transport {
 }
 
 func (m *multiNodeHelper) ValidateCertificate(c *gin.Context) bool {
-	return true
+	expected := strings.TrimSpace(readNodeFile(".nodeToken"))
+	if expected == "" {
+		return true
+	}
+	return c.GetHeader("X-Panel-Node-Token") == expected
 }
 
 func (m *multiNodeHelper) PushSSLToNode(websiteSSL *model.WebsiteSSL) error {
@@ -70,5 +77,16 @@ func (m *multiNodeHelper) PushSSLToNode(websiteSSL *model.WebsiteSSL) error {
 }
 
 func (m *multiNodeHelper) GetAgentInfo() (*dto.AgentInfo, error) {
-	return nil, nil
+	return &dto.AgentInfo{
+		NodeName: strings.TrimSpace(readNodeFile(".nodeName")),
+		NodeAddr: "127.0.0.1",
+	}, nil
+}
+
+func readNodeFile(name string) string {
+	data, err := os.ReadFile(path.Join("/etc/1panel", name))
+	if err != nil {
+		return ""
+	}
+	return string(data)
 }

@@ -13,6 +13,7 @@ func Init() {
 		migrations.InitSetting,
 		migrations.InitOneDrive,
 		migrations.InitHost,
+		migrations.AddCommunityNodes,
 		migrations.InitTerminalSetting,
 		migrations.AddTaskDB,
 		migrations.AddPasskeySetting,

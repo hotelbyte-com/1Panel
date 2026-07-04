@@ -46,6 +46,27 @@ export const listNodeOptions = (type: string) => {
 export const updateNodeFavorite = (id: number, isFavorite: boolean) => {
     return http.post(`/core/xpack/nodes/favorite`, { id, isFavorite });
 };
+export const getNodeDashboard = () => {
+    return http.get<Setting.NodeDashboard>(`/core/xpack/nodes/dashboard`);
+};
+export const createNode = (params: Setting.NodeCreate) => {
+    return http.post(`/core/nodes`, params, TimeoutEnum.T_60S);
+};
+export const checkNode = (params: Setting.NodeCreate) => {
+    return http.post<Setting.NodeItem>(`/core/nodes/check`, params, TimeoutEnum.T_60S);
+};
+export const updateNode = (params: Setting.NodeUpdate) => {
+    return http.post(`/core/nodes/update`, params, TimeoutEnum.T_60S);
+};
+export const deleteNode = (id: number, cleanAgent = false) => {
+    return http.post(`/core/nodes/del`, { id, cleanAgent }, TimeoutEnum.T_60S);
+};
+export const syncNodes = (ids: number[]) => {
+    return http.post(`/core/xpack/nodes/sync`, { ids }, TimeoutEnum.T_60S);
+};
+export const upgradeNodes = (ids: number[]) => {
+    return http.post(`/core/xpack/nodes/upgrade`, { ids }, TimeoutEnum.T_60S);
+};
 export const listAllSimpleNodes = () => {
     return http.get<Array<Setting.SimpleNodeItem>>(`/core/nodes/simple/all`);
 };
