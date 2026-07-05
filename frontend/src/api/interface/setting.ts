@@ -312,12 +312,50 @@ export namespace Setting {
         groupID?: number;
         groupBelong?: string;
         addr: string;
+        displayAddr?: string;
         status: string;
         version: string;
         isXpack: boolean;
         isBound: boolean;
         isFavorite?: boolean;
+        isAutoUpgrade?: boolean;
         name: string;
+        description?: string;
+        securityEntrance?: string;
+        systemVersion?: string;
+        cpuUsedPercent?: number;
+        cpuTotal?: number;
+        memoryTotal?: number;
+        memoryUsedPercent?: number;
+        lastMessage?: string;
+    }
+    export interface NodeCreate {
+        name: string;
+        addr: string;
+        displayAddr?: string;
+        groupID?: number;
+        description?: string;
+        agentPort: number;
+        sshPort: number;
+        sshUser: string;
+        authMode: string;
+        password?: string;
+        privateKey?: string;
+        passPhrase?: string;
+        isAutoUpgrade?: boolean;
+        configure?: boolean;
+    }
+    export interface NodeUpdate extends NodeCreate {
+        id: number;
+    }
+    export interface NodeDashboard {
+        total: number;
+        healthy: number;
+        offline: number;
+        unhealthy: number;
+        upgrading: number;
+        syncing: number;
+        nodes: NodeItem[];
     }
     export interface SimpleNodeItem {
         id: number;

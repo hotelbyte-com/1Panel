@@ -61,4 +61,7 @@ func initBaseInfo() {
 		panic(err)
 	}
 	global.CONF.Base.InstallDir = nodeInfo.BaseDir
+	if global.CONF.Base.Port == "" && nodeInfo.NodePort != 0 {
+		global.CONF.Base.Port = fmt.Sprintf("%d", nodeInfo.NodePort)
+	}
 }

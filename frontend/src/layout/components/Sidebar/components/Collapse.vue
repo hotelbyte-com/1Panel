@@ -122,9 +122,6 @@ const switchingNode = ref(false);
 const popoverVisible = ref(false);
 const nodeDrawerVisible = ref(false);
 const userInfoRef = ref();
-const props = defineProps({
-    version: String,
-});
 
 const defaultNodeLimit = 8;
 
@@ -157,6 +154,7 @@ const showPopover = async () => {
 const displayNodeName = (item) => {
     return item.name === 'local' ? globalStore.getMasterAlias() : item.name;
 };
+const displayNodeAddr = (item) => item.displayAddr || item.addr;
 
 const openNodeDrawer = () => {
     nodeDrawerVisible.value = true;
@@ -203,7 +201,7 @@ const changeNode = async (command: string) => {
                     }
                     await loadGlobalSetting('local');
                     currentNode.value = 'local';
-                    currentNodeAddr.value = item.addr;
+                    currentNodeAddr.value = displayNodeAddr(item);
                     localStorage.removeItem('dashboardCache');
                     localStorage.removeItem('upgradeChecked');
                     menuStore.setMenuList([]);
@@ -220,15 +218,11 @@ const changeNode = async (command: string) => {
                     MsgError(i18n.global.t('xpack.node.nodeUnhealthyHelper'));
                     return;
                 }
-                if (props.version != item.version) {
-                    MsgError(i18n.global.t('setting.versionNotSame'));
-                    return;
-                }
                 await loadGlobalSetting(command);
                 localStorage.removeItem('dashboardCache');
                 localStorage.removeItem('upgradeChecked');
                 currentNode.value = command;
-                currentNodeAddr.value = item.addr;
+                currentNodeAddr.value = displayNodeAddr(item);
                 if (isEnterprise.value) {
                     await loadCurrentUser(command);
                 }

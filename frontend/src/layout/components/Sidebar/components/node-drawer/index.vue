@@ -64,7 +64,7 @@
                                     </div>
                                 </div>
                                 <div class="node-table__cell node-table__cell--addr">
-                                    <span class="node-table__addr-text">{{ row.addr }}</span>
+                                    <span class="node-table__addr-text">{{ displayNodeAddr(row) }}</span>
                                 </div>
                             </div>
                         </div>
@@ -116,7 +116,7 @@ const filteredNodes = computed(() => {
         if (!searchValue) {
             return true;
         }
-        return [item.name, group, item.addr].some((value) =>
+        return [item.name, group, displayNodeAddr(item)].some((value) =>
             String(value || '')
                 .toLowerCase()
                 .includes(searchValue),
@@ -162,6 +162,7 @@ const nodeGroups = computed(() => {
 const displayNodeName = (item: NodeItem) => {
     return item.name === 'local' ? props.masterAlias : item.name;
 };
+const displayNodeAddr = (item: NodeItem) => item.displayAddr || item.addr;
 
 const displayGroupName = (item: NodeItem) => {
     if (item.groupBelong === 'Default') {

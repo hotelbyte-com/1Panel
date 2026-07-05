@@ -160,7 +160,7 @@ const GlobalStore = defineStore('GlobalState', {
             this.device = value;
         },
         getMasterAlias() {
-            return this.masterAlias || i18n.global.t('xpack.node.master');
+            return this.masterAlias || this.themeConfig.panelName || i18n.global.t('xpack.node.master');
         },
     },
     persist: piniaPersistConfig('GlobalState'),

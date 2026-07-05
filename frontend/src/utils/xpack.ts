@@ -83,6 +83,7 @@ const loadDataFromDB = async () => {
     const globalStore = GlobalStore();
     const res = await getSettingBaseInfo();
     document.title = res.data.panelName;
+    globalStore.themeConfig.panelName = res.data.panelName;
     globalStore.entrance = res.data.securityEntrance;
     globalStore.openMenuTabs = res.data.menuTabs === 'Enable';
     globalStore.menuAccordion = res.data.menuAccordion === 'Enable';
