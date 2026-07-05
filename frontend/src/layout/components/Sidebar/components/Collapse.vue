@@ -122,9 +122,6 @@ const switchingNode = ref(false);
 const popoverVisible = ref(false);
 const nodeDrawerVisible = ref(false);
 const userInfoRef = ref();
-const props = defineProps({
-    version: String,
-});
 
 const defaultNodeLimit = 8;
 
@@ -218,10 +215,6 @@ const changeNode = async (command: string) => {
                 }
                 if (item.status !== 'Healthy') {
                     MsgError(i18n.global.t('xpack.node.nodeUnhealthyHelper'));
-                    return;
-                }
-                if (props.version != item.version) {
-                    MsgError(i18n.global.t('setting.versionNotSame'));
                     return;
                 }
                 await loadGlobalSetting(command);
