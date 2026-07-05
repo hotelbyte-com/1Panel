@@ -17,6 +17,7 @@ type NodeListReq struct {
 type NodeCreate struct {
 	Name          string `json:"name" validate:"required"`
 	Addr          string `json:"addr" validate:"required"`
+	DisplayAddr   string `json:"displayAddr"`
 	GroupID       uint   `json:"groupID"`
 	Description   string `json:"description"`
 	AgentPort     int    `json:"agentPort"`
@@ -34,6 +35,7 @@ type NodeUpdate struct {
 	ID            uint   `json:"id" validate:"required"`
 	Name          string `json:"name" validate:"required"`
 	Addr          string `json:"addr" validate:"required"`
+	DisplayAddr   string `json:"displayAddr"`
 	GroupID       uint   `json:"groupID"`
 	Description   string `json:"description"`
 	AgentPort     int    `json:"agentPort"`
@@ -68,6 +70,7 @@ type NodeItem struct {
 	GroupID           uint    `json:"groupID"`
 	GroupBelong       string  `json:"groupBelong"`
 	Addr              string  `json:"addr"`
+	DisplayAddr       string  `json:"displayAddr"`
 	Status            string  `json:"status"`
 	Version           string  `json:"version"`
 	SystemVersion     string  `json:"systemVersion"`
@@ -89,6 +92,7 @@ type SimpleNodeItem struct {
 	ID                uint    `json:"id"`
 	Name              string  `json:"name"`
 	Addr              string  `json:"addr"`
+	DisplayAddr       string  `json:"displayAddr"`
 	Description       string  `json:"description"`
 	SystemVersion     string  `json:"systemVersion"`
 	SecurityEntrance  string  `json:"securityEntrance"`

@@ -71,7 +71,7 @@ func (n *NodeService) ListSimple() ([]dto.SimpleNodeItem, error) {
 	items := make([]dto.SimpleNodeItem, 0, len(list))
 	for _, item := range list {
 		items = append(items, dto.SimpleNodeItem{
-			ID: item.ID, Name: item.Name, Addr: item.Addr, Description: item.Description,
+			ID: item.ID, Name: item.Name, Addr: item.Addr, DisplayAddr: item.DisplayAddr, Description: item.Description,
 			SystemVersion: item.SystemVersion, SecurityEntrance: item.SecurityEntrance,
 			CPUUsedPercent: item.CPUUsedPercent, CPUTotal: item.CPUTotal,
 			MemoryTotal: item.MemoryTotal, MemoryUsedPercent: item.MemoryUsedPercent,
@@ -105,8 +105,9 @@ func (n *NodeService) Dashboard() (*dto.NodeDashboard, error) {
 
 func (n *NodeService) Check(req dto.NodeCreate) (*dto.NodeItem, error) {
 	node := model.Node{
-		Name: req.Name, Addr: req.Addr, AgentPort: normalizePort(req.AgentPort, 9999),
-		SSHPort: normalizePort(req.SSHPort, 22), SSHUser: normalizeUser(req.SSHUser),
+		Name: req.Name, Addr: req.Addr, DisplayAddr: normalizeDisplayAddr(req.DisplayAddr, req.Addr),
+		AgentPort: normalizePort(req.AgentPort, 9999),
+		SSHPort:   normalizePort(req.SSHPort, 22), SSHUser: normalizeUser(req.SSHUser),
 		AuthMode: normalizeAuthMode(req.AuthMode), Status: string(dto.NodeStatusUnhealthy),
 		IsBound: true,
 	}
@@ -143,7 +144,8 @@ func (n *NodeService) Create(req dto.NodeCreate) error {
 	}
 	node := model.Node{
 		Name: req.Name, Addr: req.Addr, GroupID: req.GroupID, Description: req.Description,
-		AgentPort: req.AgentPort, SSHPort: req.SSHPort, SSHUser: req.SSHUser, AuthMode: req.AuthMode,
+		DisplayAddr: normalizeDisplayAddr(req.DisplayAddr, req.Addr),
+		AgentPort:   req.AgentPort, SSHPort: req.SSHPort, SSHUser: req.SSHUser, AuthMode: req.AuthMode,
 		Status: string(dto.NodeStatusUnhealthy), IsBound: true, IsXpack: false, IsAutoUpgrade: req.IsAutoUpgrade,
 		Token: uuid.NewString(),
 	}
@@ -174,6 +176,7 @@ func (n *NodeService) Update(req dto.NodeUpdate) error {
 	}
 	node.Name = req.Name
 	node.Addr = req.Addr
+	node.DisplayAddr = normalizeDisplayAddr(req.DisplayAddr, req.Addr)
 	node.GroupID = req.GroupID
 	node.Description = req.Description
 	node.AgentPort = normalizePort(req.AgentPort, 9999)
@@ -193,7 +196,7 @@ func (n *NodeService) Update(req dto.NodeUpdate) error {
 	}
 	_ = n.refreshNodeStatus(&node)
 	return nodeRepo.Update(req.ID, map[string]interface{}{
-		"name": node.Name, "addr": node.Addr, "group_id": node.GroupID, "description": node.Description,
+		"name": node.Name, "addr": node.Addr, "display_addr": node.DisplayAddr, "group_id": node.GroupID, "description": node.Description,
 		"agent_port": node.AgentPort, "ssh_port": node.SSHPort, "ssh_user": node.SSHUser, "auth_mode": node.AuthMode,
 		"password": node.Password, "private_key": node.PrivateKey, "pass_phrase": node.PassPhrase,
 		"token": node.Token, "status": node.Status, "version": node.Version, "system_version": node.SystemVersion,
@@ -441,7 +444,7 @@ func (n *NodeService) toNodeItem(node model.Node) dto.NodeItem {
 		}
 	}
 	item := dto.NodeItem{
-		ID: node.ID, GroupID: node.GroupID, GroupBelong: groupName, Addr: node.Addr,
+		ID: node.ID, GroupID: node.GroupID, GroupBelong: groupName, Addr: node.Addr, DisplayAddr: displayAddr(node),
 		Status: node.Status, Version: node.Version, SystemVersion: node.SystemVersion,
 		SecurityEntrance: node.SecurityEntrance, IsXpack: node.IsXpack, IsBound: node.IsBound,
 		IsFavorite: node.IsFavorite, IsAutoUpgrade: node.IsAutoUpgrade, Name: node.Name,
@@ -547,7 +550,7 @@ func (n *NodeService) localNode() model.Node {
 	port, _ := strconv.Atoi(serverPort)
 	return model.Node{
 		BaseModel: model.BaseModel{ID: 0}, Name: "local", Addr: "127.0.0.1", Status: string(dto.NodeStatusHealthy),
-		Version: version, SystemVersion: version, SecurityEntrance: entrance, AgentPort: port,
+		DisplayAddr: "127.0.0.1", Version: version, SystemVersion: version, SecurityEntrance: entrance, AgentPort: port,
 		IsBound: true, IsXpack: false,
 	}
 }
@@ -605,6 +608,20 @@ func normalizeAuthMode(mode string) string {
 		return "key"
 	}
 	return "password"
+}
+
+func normalizeDisplayAddr(displayAddrValue, fallback string) string {
+	if strings.TrimSpace(displayAddrValue) != "" {
+		return strings.TrimSpace(displayAddrValue)
+	}
+	return strings.TrimSpace(fallback)
+}
+
+func displayAddr(node model.Node) string {
+	if strings.TrimSpace(node.DisplayAddr) != "" {
+		return strings.TrimSpace(node.DisplayAddr)
+	}
+	return strings.TrimSpace(node.Addr)
 }
 
 func isDuplicateLocalNode(node, local model.Node, localAddrs map[string]struct{}) bool {

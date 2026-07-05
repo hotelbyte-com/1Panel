@@ -357,6 +357,18 @@ var AddCommunityNodes = &gormigrate.Migration{
 	},
 }
 
+var AddNodeDisplayAddr = &gormigrate.Migration{
+	ID: "20260705-add-node-display-addr",
+	Migrate: func(tx *gorm.DB) error {
+		if err := tx.AutoMigrate(&model.Node{}); err != nil {
+			return err
+		}
+		return tx.Model(&model.Node{}).
+			Where("display_addr = '' OR display_addr IS NULL").
+			Update("display_addr", gorm.Expr("addr")).Error
+	},
+}
+
 var InitOneDrive = &gormigrate.Migration{
 	ID: "20240808-init-one-drive",
 	Migrate: func(tx *gorm.DB) error {

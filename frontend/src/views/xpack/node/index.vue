@@ -36,7 +36,7 @@
                         <el-tag v-if="row.name === 'local'" class="ml-2" size="small">Master</el-tag>
                     </template>
                 </el-table-column>
-                <el-table-column prop="addr" :label="$t('home.ip')" min-width="150" />
+                <el-table-column prop="displayAddr" :label="$t('home.ip')" min-width="150" />
                 <el-table-column prop="groupBelong" :label="$t('commons.table.group')" min-width="120" />
                 <el-table-column :label="$t('commons.table.status')" width="130">
                     <template #default="{ row }">
@@ -265,7 +265,7 @@ const switchNode = async (row: Setting.NodeItem) => {
         localStorage.removeItem('dashboardCache');
         localStorage.removeItem('upgradeChecked');
         currentNode.value = targetNode;
-        currentNodeAddr.value = row.addr;
+        currentNodeAddr.value = displayAddr(row);
         menuStore.setMenuList([]);
         loadProductProFromDB();
         MsgSuccess(i18n.global.t('commons.msg.operationSuccess'));
@@ -277,6 +277,7 @@ const switchNode = async (row: Setting.NodeItem) => {
 };
 
 const displayNode = (row: Setting.NodeItem) => (row.name === 'local' ? globalStore.getMasterAlias() : row.name);
+const displayAddr = (row: Setting.NodeItem) => row.displayAddr || row.addr;
 const formatPercent = (value?: number) => (value == undefined ? '-' : `${value.toFixed(1)}%`);
 
 onMounted(search);

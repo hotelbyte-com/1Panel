@@ -4,6 +4,7 @@ type Node struct {
 	BaseModel
 	Name             string `json:"name" gorm:"not null;unique"`
 	Addr             string `json:"addr" gorm:"not null"`
+	DisplayAddr      string `json:"displayAddr"`
 	GroupID          uint   `json:"groupID"`
 	Description      string `json:"description"`
 	Status           string `json:"status"`

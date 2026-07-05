@@ -312,6 +312,7 @@ export namespace Setting {
         groupID?: number;
         groupBelong?: string;
         addr: string;
+        displayAddr?: string;
         status: string;
         version: string;
         isXpack: boolean;
@@ -331,6 +332,7 @@ export namespace Setting {
     export interface NodeCreate {
         name: string;
         addr: string;
+        displayAddr?: string;
         groupID?: number;
         description?: string;
         agentPort: number;
