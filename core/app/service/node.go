@@ -7,7 +7,9 @@ import (
 	"errors"
 	"fmt"
 	"io"
+	"net"
 	"net/http"
+	"os"
 	"strconv"
 	"strings"
 	"time"
@@ -518,17 +520,24 @@ func (n *NodeService) loadNodesWithLocal() ([]model.Node, error) {
 		return nil, err
 	}
 	local := n.localNode()
+	localAddrs := localAddressSet()
 	hasLocal := false
+	filtered := make([]model.Node, 0, len(nodes)+1)
 	for i := range nodes {
 		if nodes[i].Name == "local" {
 			hasLocal = true
-			nodes[i] = local
+			filtered = append(filtered, local)
+			continue
 		}
+		if isDuplicateLocalNode(nodes[i], local, localAddrs) {
+			continue
+		}
+		filtered = append(filtered, nodes[i])
 	}
 	if !hasLocal {
-		nodes = append([]model.Node{local}, nodes...)
+		filtered = append([]model.Node{local}, filtered...)
 	}
-	return nodes, nil
+	return filtered, nil
 }
 
 func (n *NodeService) localNode() model.Node {
@@ -596,6 +605,81 @@ func normalizeAuthMode(mode string) string {
 		return "key"
 	}
 	return "password"
+}
+
+func isDuplicateLocalNode(node, local model.Node, localAddrs map[string]struct{}) bool {
+	port := normalizePort(node.AgentPort, 9999)
+	if port != 9999 && port != normalizePort(local.AgentPort, 9999) {
+		return false
+	}
+	host := normalizeHost(node.Addr)
+	if host == "" {
+		return false
+	}
+	if ip := net.ParseIP(host); ip != nil {
+		if ip.IsLoopback() {
+			return true
+		}
+		_, ok := localAddrs[ip.String()]
+		return ok
+	}
+	if _, ok := localAddrs[host]; ok {
+		return true
+	}
+	addrs, err := net.LookupHost(host)
+	if err != nil {
+		return false
+	}
+	for _, addr := range addrs {
+		if ip := net.ParseIP(addr); ip != nil && ip.IsLoopback() {
+			return true
+		}
+		if _, ok := localAddrs[addr]; ok {
+			return true
+		}
+	}
+	return false
+}
+
+func localAddressSet() map[string]struct{} {
+	addrs := map[string]struct{}{
+		"localhost": {},
+		"127.0.0.1": {},
+		"::1":       {},
+	}
+	if hostname, err := os.Hostname(); err == nil && hostname != "" {
+		addrs[hostname] = struct{}{}
+		if hosts, err := net.LookupHost(hostname); err == nil {
+			for _, host := range hosts {
+				addrs[host] = struct{}{}
+			}
+		}
+	}
+	if ifaceAddrs, err := net.InterfaceAddrs(); err == nil {
+		for _, addr := range ifaceAddrs {
+			if ipNet, ok := addr.(*net.IPNet); ok && ipNet.IP != nil {
+				addrs[ipNet.IP.String()] = struct{}{}
+			}
+		}
+	}
+	return addrs
+}
+
+func normalizeHost(addr string) string {
+	host := strings.TrimSpace(addr)
+	if host == "" {
+		return ""
+	}
+	if strings.HasPrefix(host, "[") && strings.Contains(host, "]") {
+		if parsed, _, err := net.SplitHostPort(host); err == nil {
+			return parsed
+		}
+		return strings.Trim(host, "[]")
+	}
+	if parsed, _, err := net.SplitHostPort(host); err == nil {
+		return parsed
+	}
+	return host
 }
 
 func shellQuote(value string) string {
